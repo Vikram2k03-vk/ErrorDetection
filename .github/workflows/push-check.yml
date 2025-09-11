@@ -1,32 +1,17 @@
-name: XML Validation
+name: Validate XML
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
-  xml-check:
+  validate-xml:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Validate XML files
         run: |
-          set -e
-          echo "Checking XML files for errors..."
-
-          FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.xml$' || true)
-
-          if [ -z "$FILES" ]; then
-            echo "No XML files to check."
-          else
-            for f in $FILES; do
-              echo "Validating $f"
-              xmllint --noout "$f"
-            done
-          fi
-
+          for file in $(find . -name '*.xml'); do
+            if ! xmllint --noout "$file"; then
+              echo "❌ Invalid XML: $file"
+              exit 1
+            fi
+          done
