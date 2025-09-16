@@ -1,17 +1,34 @@
-name: Validate XML
+name: XML Validation
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '**/*.xml'  # ✅ Only trigger on XML file changes
 
 jobs:
   validate-xml:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Validate XML files
         run: |
+          set -e
+          ERROR=0
           for file in $(find . -name '*.xml'); do
             if ! xmllint --noout "$file"; then
               echo "❌ Invalid XML: $file"
-              exit 1
+              ERROR=1
+            else
+              echo "✅ Valid: $file"
             fi
           done
+
+          if [ "$ERROR" -ne 0 ]; then
+            echo "❌ XML validation failed."
+            exit 1
+          else
+            echo "✅ All XML files passed validation."
+          fi
