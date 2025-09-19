@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project>
-    <config>
-        <database>
-            <url>jdbc:mysql://localhost:3306/mydb</url>
-            <username>admin</username>
-            <password>${DB_PASSWORD}</password>
-            <timeout>30</timeout>
-        <!-- Missing closing tags -->
+<processDefinition name="OrderProcess">
+    <activities>
+        <jdbcActivity name="SelectCustomer">
+            <username>admin</username> <!-- ❌ Hardcoded username -->
+            <password></password>      <!-- ❌ Empty password -->
+            <timeout></timeout>        <!-- ❌ Missing timeout value -->
+        </jdbcActivity>
+        <jdbcActivity name="UpdateOrder">
+            <username>${DB_USER}</username>  <!-- ✅ Correct usage -->
+            <password>${DB_PASSWORD}</password> <!-- ✅ Correct usage -->
+            <timeout>30000</timeout>          <!-- ✅ Correct usage -->
+        </jdbcActivity>
+    </activities>
+</processDefinition>
