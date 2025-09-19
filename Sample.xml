@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<processDefinition name="OrderProcess">
+    <activities>
+        <jdbcActivity name="UpdateOrder">
+            <username>${DB_USER}</username>  <!-- ✅ Correct usage -->
+            <password>${DB_PASSWORD}</password> <!-- ✅ Correct usage -->
+            <timeout>30000</timeout>          <!-- ✅ Correct usage -->
+        </jdbcActivity>
+    </activities>
+</processDefinition>
