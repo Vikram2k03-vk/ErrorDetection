@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<company>
+    <employee id="101">
+        <name>John Doe</name>
+        <department>Engineering</department>
+        <email>john.doe@example.com</email>
+    <employee id="102">
+        <name></name>
+        <department>Marketing</department>
+        <email>jane.smith@example.com</email>
+    </employee>
+</company>
