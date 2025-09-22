@@ -1,0 +1,52 @@
+name: XML Validation
+
+on:
+  pull_request:
+    paths:
+      - '**/*.xml'
+
+jobs:
+  validate-xml:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
+      options: --entrypoint ""
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build validator Docker image
+        run: |
+          docker build -t xml-validator .github/docker/xml-validator
+
+      - name: Get changed XML files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **/*.xml
+
+      - name: Validate changed XML files inside Docker
+        run: |
+          docker run --rm -v "$PWD:/workspace" -w /workspace xml-validator '
+            set -e
+            ERROR=0
+            for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+              echo "🔍 Checking $file"
+              if ! xmllint --noout "$file"; then
+                echo "❌ Invalid XML (xmllint): $file"
+                ERROR=1
+              fi
+              if ! xmlstarlet val -e -s "$file"; then
+                echo "❌ Invalid XML (xmlstarlet): $file"
+                ERROR=1
+              fi
+            done
+            if [ "$ERROR" -ne 0 ]; then
+              echo "❌ XML validation failed."
+              exit 1
+            else
+              echo "✅ All files passed XML validation."
+            fi
+          '
