@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<order>
+    <customer>
+        <name>John Doe</name>
+        <email>john@example.com</email>
+    <!-- Missing closing tag for <customer> here -->
+
+    <items>
+        <item>
+            <id>123</id>
+            <name>Widget</name>
+            <!-- Missing closing tag for <item> -->
+
+        <item>
+            <id>456</id>
+            <name>Gadget</name>
+        </item>
+    </items>
+
+    <total>99.99</total>
+</order>
