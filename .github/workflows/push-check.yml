@@ -1,9 +1,9 @@
 name: XML Validation
 
 on:
-  push:
+  pull_request:
     paths:
-      - '**/*.xml'  # ✅ Only trigger on XML file changes
+      - '**/*.xml'  
 
 jobs:
   validate-xml:
@@ -13,11 +13,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Validate XML files
+      - name: Get changed XML files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **/*.xml
+
+      - name: Validate changed XML files
         run: |
           set -e
           ERROR=0
-          for file in $(find . -name '*.xml'); do
+
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "🔍 Checking $file"
             if ! xmllint --noout "$file"; then
               echo "❌ Invalid XML: $file"
               ERROR=1
@@ -30,5 +39,5 @@ jobs:
             echo "❌ XML validation failed."
             exit 1
           else
-            echo "✅ All XML files passed validation."
+            echo "✅ All changed XML files passed validation."
           fi
