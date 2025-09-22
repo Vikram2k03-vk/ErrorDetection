@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<globalVariables>
+    <globalVariable name="LOG_LEVEL" type="string" value="INFO">
+        <description>Controls the logging level of the application</description>
+        <!-- ✅ Correct usage -->
+    </globalVariable>
+</globalVariables>
