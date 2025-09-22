@@ -1,16 +1,17 @@
-name: XML Error Detection
+name: Strict XML Validation
 
 on:
   pull_request:
     paths:
       - '**/*.xml'
+      - 'schemas/**/*.xsd'   # also trigger if schemas change
 
 jobs:
-  validate-xml:
+  strict-validate-xml:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Build validator Docker image
@@ -21,28 +22,55 @@ jobs:
         run: |
           echo "files=$(find . -type f -name '*.xml' | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
-      - name: Run validation inside Docker
+      - name: Run strict validation inside Docker
         run: |
           docker run --rm -v "$PWD:/workspace" -w /workspace xml-validator bash -c '
             set -e
             ERROR=0
-            echo "🧪 Validating XML files..."
+
             for file in ${{ steps.xml-files.outputs.files }}; do
-              echo "🔍 Checking $file"
+              echo "🔍 Validating $file"
+
+              # First check well-formedness
               if ! xmllint --noout "$file"; then
-                echo "❌ Invalid XML (xmllint): $file"
+                echo "❌ Not well-formed XML: $file"
+                ERROR=1
+                continue
+              fi
+
+              # Try schema validation if an XSD exists for this XML
+              # You may need to adjust logic to find correct schema file
+              schema_path=""
+              # Example: if your XML file name corresponds to schema file
+              schema_candidate="schemas/$(basename "$file" .xml).xsd"
+              if [ -f "$schema_candidate" ]; then
+                schema_path="$schema_candidate"
+              fi
+
+              if [ -n "$schema_path" ]; then
+                if ! xmllint --noout --schema "$schema_path" "$file"; then
+                  echo "❌ Fails schema validation: $file (schema: $schema_path)"
+                  ERROR=1
+                  continue
+                fi
+              else
+                echo "⚠️ No schema found for $file — skipping schema check"
+              fi
+
+              # Additional rules: check for hardcoded names, missing tags etc.
+              # You could use xmlstarlet or custom XPath rules here
+              # Example: check if element <username> exists
+              if ! xmlstarlet sel -t -v "//*[local-name()='username']" "$file" >/dev/null; then
+                echo "❌ Missing <username> tag in $file"
                 ERROR=1
               fi
-              if ! xmlstarlet val -e -s "$file"; then
-                echo "❌ Invalid XML (xmlstarlet): $file"
-                ERROR=1
-              fi
+
             done
 
             if [ "$ERROR" -ne 0 ]; then
-              echo "❌ XML validation failed."
+              echo "❌ Strict XML validation failed."
               exit 1
             else
-              echo "✅ All XML files passed validation."
+              echo "✅ All XML strictly validated!"
             fi
           '
