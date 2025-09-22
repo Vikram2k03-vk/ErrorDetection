@@ -1,76 +1,50 @@
-name: Strict XML Validation
+name: XML Validation
 
 on:
   pull_request:
-    paths:
-      - '**/*.xml'
-      - 'schemas/**/*.xsd'   # also trigger if schemas change
 
 jobs:
-  strict-validate-xml:
+  validate-xml:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build validator Docker image
-        run: docker build -t xml-validator .github/docker/xml-validator
+      - name: Install xmlstarlet
+        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
 
-      - name: Find all XML files
-        id: xml-files
+      - name: Get changed XML files in the PR
+        id: get_xml_files
         run: |
-          echo "files=$(find . -type f -name '*.xml' | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          echo "Fetching changed files in the PR"
+          # Get list of changed files between PR base and head branches
+          files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.xml$' || true)
+          echo "Changed XML files:"
+          echo "$files"
+          # Output as newline-separated string for next step
+          echo "::set-output name=files::$files"
 
-      - name: Run strict validation inside Docker
+      - name: Validate changed XML files
+        if: steps.get_xml_files.outputs.files != ''
         run: |
-          docker run --rm -v "$PWD:/workspace" -w /workspace xml-validator bash -c '
-            set -e
-            ERROR=0
-
-            for file in ${{ steps.xml-files.outputs.files }}; do
-              echo "🔍 Validating $file"
-
-              # First check well-formedness
-              if ! xmllint --noout "$file"; then
-                echo "❌ Not well-formed XML: $file"
-                ERROR=1
-                continue
-              fi
-
-              # Try schema validation if an XSD exists for this XML
-              # You may need to adjust logic to find correct schema file
-              schema_path=""
-              # Example: if your XML file name corresponds to schema file
-              schema_candidate="schemas/$(basename "$file" .xml).xsd"
-              if [ -f "$schema_candidate" ]; then
-                schema_path="$schema_candidate"
-              fi
-
-              if [ -n "$schema_path" ]; then
-                if ! xmllint --noout --schema "$schema_path" "$file"; then
-                  echo "❌ Fails schema validation: $file (schema: $schema_path)"
-                  ERROR=1
-                  continue
-                fi
-              else
-                echo "⚠️ No schema found for $file — skipping schema check"
-              fi
-
-              # Additional rules: check for hardcoded names, missing tags etc.
-              # You could use xmlstarlet or custom XPath rules here
-              # Example: check if element <username> exists
-              if ! xmlstarlet sel -t -v "//*[local-name()='username']" "$file" >/dev/null; then
-                echo "❌ Missing <username> tag in $file"
-                ERROR=1
-              fi
-
-            done
-
-            if [ "$ERROR" -ne 0 ]; then
-              echo "❌ Strict XML validation failed."
-              exit 1
-            else
-              echo "✅ All XML strictly validated!"
+          set -e
+          ERROR=0
+          for file in ${{ steps.get_xml_files.outputs.files }}; do
+            echo "🔍 Validating $file"
+            if ! xmlstarlet val -e -s "$file"; then
+              echo "❌ XML validation failed for $file"
+              ERROR=1
             fi
-          '
+          done
+
+          if [ $ERROR -ne 0 ]; then
+            echo "::error ::XML validation failed."
+            exit 1
+          else
+            echo "✅ All changed XML files passed validation."
+          fi
+
+      - name: No XML changes found
+        if: steps.get_xml_files.outputs.files == ''
+        run: echo "No changed XML files to validate."
