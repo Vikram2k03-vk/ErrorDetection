@@ -8,17 +8,13 @@ on:
 jobs:
   validate-xml:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-      options: --entrypoint ""
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Build validator Docker image
-        run: |
-          docker build -t xml-validator .github/docker/xml-validator
+        run: docker build -t xml-validator .github/docker/xml-validator
 
       - name: Get changed XML files
         id: changed-files
