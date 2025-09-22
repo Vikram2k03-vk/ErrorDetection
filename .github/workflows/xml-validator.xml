@@ -1,4 +1,4 @@
-name: XML Validation
+name: XML Error Detection
 
 on:
   pull_request:
@@ -10,29 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository code
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Build the XML validator Docker image
       - name: Build validator Docker image
         run: docker build -t xml-validator .github/docker/xml-validator
 
-      # Get list of changed XML files in the PR
-      - name: Get changed XML files
-        id: changed-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            **/*.xml
+      - name: Find all XML files
+        id: xml-files
+        run: |
+          echo "files=$(find . -type f -name '*.xml' | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
-      # Run validation on changed files inside Docker
-      - name: Validate changed XML files inside Docker
+      - name: Run validation inside Docker
         run: |
           docker run --rm -v "$PWD:/workspace" -w /workspace xml-validator bash -c '
             set -e
             ERROR=0
-            for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "🧪 Validating XML files..."
+            for file in ${{ steps.xml-files.outputs.files }}; do
               echo "🔍 Checking $file"
               if ! xmllint --noout "$file"; then
                 echo "❌ Invalid XML (xmllint): $file"
@@ -43,10 +38,11 @@ jobs:
                 ERROR=1
               fi
             done
+
             if [ "$ERROR" -ne 0 ]; then
               echo "❌ XML validation failed."
               exit 1
             else
-              echo "✅ All files passed XML validation."
+              echo "✅ All XML files passed validation."
             fi
           '
