@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install xmlstarlet
         run: sudo apt-get update && sudo apt-get install -y xmlstarlet
@@ -18,11 +20,10 @@ jobs:
         id: get_xml_files
         run: |
           echo "Fetching changed files in the PR"
-          # Get list of changed files between PR base and head branches
           files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.xml$' || true)
           echo "Changed XML files:"
           echo "$files"
-          # Output as newline-separated string for next step
+          # Output for later step (newline separated list)
           echo "::set-output name=files::$files"
 
       - name: Validate changed XML files
@@ -45,6 +46,6 @@ jobs:
             echo "✅ All changed XML files passed validation."
           fi
 
-      - name: No XML changes found
+      - name: No changed XML files
         if: steps.get_xml_files.outputs.files == ''
-        run: echo "No changed XML files to validate."
+        run: echo "No changed XML files found to validate."
