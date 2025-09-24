@@ -5,7 +5,6 @@
 
     <globalVariable name="API_KEY" type="string" value="12345">
         <!-- ❌ Missing description -->
-    </globalVariable>
 
     <globalVariable name="LOG_LEVEL" type="string" value="INFO">
         <description>Controls the logging level of the application</description>
