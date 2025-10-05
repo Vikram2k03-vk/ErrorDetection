@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<processDefinition name="JDBCTestProcess" xmlns="http://www.tibco.com/bw/schema/common/2003">
+
+    <!-- JDBC Activity to test rules -->
+    <jdbcActivity name="SelectCustomer">
+        <username>admin</username>       <!-- Hardcoded username -->
+        <password>secret</password>      <!-- Hardcoded password -->
+        <!-- Missing timeout triggers JdbcTimeoutRule -->
+        <sql>SELECT * FROM customers WHERE customer_id = :customerId</sql>
+    </jdbcActivity>
+
+</processDefinition>
