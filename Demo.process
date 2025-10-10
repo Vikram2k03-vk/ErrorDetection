@@ -3,9 +3,8 @@
     <activities>
         <jdbcActivity name="SelectCustomer">
             <username>admin</username>       <!-- Hardcoded username -->
-            <!-- Missing <timeout> element -->
             <query>SELECT * FROM Customers</query>
-        </jdbcActivity>
+        <jdbcActivity>
 
         <jdbcActivity name="UpdateOrder">
             <username>${DB_USER}</username>  <!-- Correct: variable -->
