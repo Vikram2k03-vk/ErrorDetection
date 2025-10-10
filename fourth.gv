@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<processDefinition name="SampleJDBCProcess">
+    <activities>
+        <jdbcActivity name="UpdateOrder">
+            <username>${DB_USER}</username>
+            <password>${DB_PASSWORD}</password> 
+            <timeout>${DB_TIMEOUT}</timeout>
+            <query>UPDATE Orders SET status='processed'</query>
+        </jdbcActivity>
+    </activities>
+</processDefinition>
