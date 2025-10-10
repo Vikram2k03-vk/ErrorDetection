@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<processDefinition name="CustomerDataProcess">
+    <globalVariables>
+        <globalVariable name="DB_USER" value="admin"/> <!-- ⚠️ Missing description -->
+        <globalVariable name="DB_PASSWORD" value="secret"/> <!-- ⚠️ Missing description -->
+    </globalVariables>
+
+    <activities>
+        <jdbcActivity name="SelectCustomer">
+            <username>root</username> <!-- ❌ Hardcoded username -->
+            <password>password123</password> <!-- ❌ Hardcoded password -->
+            <!-- ❌ Missing <timeout> element -->
+            <sqlStatement>SELECT * FROM Customers WHERE id = ?</sqlStatement>
+        </jdbcActivity>
+    </activities>
+</processDefinition>
+
